@@ -73,15 +73,19 @@ def main():
                     elif line.startswith("/msg "):
                         parts = line.split(" ", 2)
                         if len(parts) < 3:
-                            print("Uso: /msg <destinatario> <mensaje>")
+                            print("Uso: /msg <dest> <mensaje>")
                             continue
                         dest, text = parts[1], parts[2]
                         chat = ChatMessage(
-                            from_id="", msg=text, ts=now_ts(), mid=gen_id(), cmd=None, to=dest
-                        )
+                            from_id="",              # el server pondrá tu alias/IP visible
+                            msg=text,
+                            ts=now_ts(),
+                            mid=gen_id(),
+                            cmd=None,                # ¡ojo! que NO sea un comando
+                            to=dest                  # <- destino privado (alias o IP)
+                        )   
                         sock.sendall(pack_message(chat.to_bytes()))
                         continue
-                    
                     else:
                         print("Comandos: /who, /nick <alias>, /quit")
                         continue
