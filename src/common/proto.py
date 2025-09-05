@@ -4,27 +4,16 @@ import json
 
 @dataclass
 class ChatMessage:
-    """Mensaje de chat a nivel de aplicación.
-
-
-    Campos mínimos:
-    - from_id: identificador visible (IP o alias)
-    - msg: texto del mensaje
-    - ts: timestamp epoch (float)
-    - mid: message id (uuid)
-    - cmd: comando opcional ("who", "nick", etc.)
-    """
+    """Mensaje de chat a nivel de aplicación."""
     from_id: str
     msg: str
     ts: float
     mid: str
     cmd: Optional[str] = None
-    to: Optional[str] = "*"
+    to: Optional[str] = "*"   # "*" = grupal; alias/IP = privado
 
     def to_bytes(self) -> bytes:
-        payload = json.dumps(asdict(self), ensure_ascii=False).encode("utf-8")
-        return payload
-
+        return json.dumps(asdict(self), ensure_ascii=False).encode("utf-8")
 
     @staticmethod
     def from_bytes(data: bytes) -> "ChatMessage":
@@ -35,4 +24,5 @@ class ChatMessage:
             ts=float(obj.get("ts", 0.0)),
             mid=obj.get("mid", ""),
             cmd=obj.get("cmd"),
+            to=obj.get("to", "*"),
         )
