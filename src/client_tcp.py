@@ -18,9 +18,22 @@ def net_reader(sock: socket.socket):
             break
         try:
             msg = ChatMessage.from_bytes(payload)
-            print(f"[{msg.from_id}] {msg.msg}")
         except Exception as e:
-            log.warning(f"Mensaje inválido: {e}")
+            log.warning(f"Mensaje inválido/JSON desconocido: {e}")
+            continue
+
+        # Mostrar según destino
+        dest = (msg.to or "*")
+        if dest != "*":
+            # Mensaje privado
+            print(f"[privado {msg.from_id}→{dest}] {msg.msg}")
+        elif msg.from_id == "server":
+            # Mensaje informativo del servidor
+            print(f"[*] {msg.msg}")
+        else:
+            # Mensaje grupal
+            print(f"[{msg.from_id}] {msg.msg}")
+
 
 
 def main():
@@ -57,6 +70,18 @@ def main():
                     elif line == "/quit":
                         cmd = "quit"
                         text = ""
+                    elif line.startswith("/msg "):
+                        parts = line.split(" ", 2)
+                        if len(parts) < 3:
+                            print("Uso: /msg <destinatario> <mensaje>")
+                            continue
+                        dest, text = parts[1], parts[2]
+                        chat = ChatMessage(
+                            from_id="", msg=text, ts=now_ts(), mid=gen_id(), cmd=None, to=dest
+                        )
+                        sock.sendall(pack_message(chat.to_bytes()))
+                        continue
+                    
                     else:
                         print("Comandos: /who, /nick <alias>, /quit")
                         continue

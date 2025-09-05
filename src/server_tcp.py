@@ -93,18 +93,30 @@ def handle_client(sock: socket.socket, addr):
                     break
 
             # Mensaje normal → retransmitir
-            sender_alias = None
-            with clients_lock:
-                sender_alias = clients.get(sock, peer_ip)
+            sender_alias = clients.get(sock, peer_ip)
+            dest = chat.to or "*"
+            
             forward = ChatMessage(
                 from_id=sender_alias,
                 msg=chat.msg,
                 ts=chat.ts,
                 mid=chat.mid,
+                to=dest,
             )
             packed = pack_message(forward.to_bytes())
-            broadcast(sock, packed)
-
+            
+            with clients_lock:
+                if dest == "*" or dest.lower() == "all":
+                    # broadcast a todos menos el remitente
+                    for s in clients:
+                        if s is not sock:
+                            s.sendall(packed)
+                else:
+                    # privado: buscar alias o IP que coincida
+                    for s, alias in clients.items():
+                        if alias == dest or s.getpeername()[0] == dest:
+                            s.sendall(packed)
+                            
     except Exception as e:
         log.warning(f"Error con {peer_ip}: {e}")
     finally:

@@ -19,6 +19,7 @@ class ChatMessage:
     ts: float
     mid: str
     cmd: Optional[str] = None
+    to: Optional[str] = "*"
 
     def to_bytes(self) -> bytes:
         payload = json.dumps(asdict(self), ensure_ascii=False).encode("utf-8")
